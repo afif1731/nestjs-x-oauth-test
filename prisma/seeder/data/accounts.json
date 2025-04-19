@@ -1,0 +1,26 @@
+[
+  {
+    "id": "e19d8588-e2c1-4147-a53a-14fcaaa6949c",
+    "username": "Admin Admin",
+    "email": "admin@admin.id",
+    "is_active": true,
+    "password": "Password",
+    "role": "ADMIN"
+  },
+  {
+    "id": "7768b25d-cb94-42ae-a120-a83006a72641",
+    "username": "user1",
+    "email": "user1@gmail.com",
+    "is_active": true,
+    "password": "Password",
+    "role": "USER"
+  },
+  {
+    "id": "9274130c-b124-4d76-bf43-5f39857eb54a",
+    "username": "user2",
+    "email": "user2@gmail.com",
+    "is_active": true,
+    "password": "Password",
+    "role": "USER"
+  }
+]

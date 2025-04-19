@@ -1,0 +1,39 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x", "linux-musl", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model accounts {
+  id                    String   @id @default(uuid())
+  email                 String   @unique
+  username              String
+  password              String
+  is_active             Boolean  @default(true)
+  role                  Role     @default(USER)
+  token_forgot_password String?
+
+  created_at            DateTime @default(now())
+  updated_at            DateTime @default(now()) @updatedAt
+}
+
+model userTwitterData {
+  id                        String   @id @default(uuid())
+  twitter_user_id           String   @unique
+  twitter_username          String
+  access_token              String
+  refresh_token             String?
+  refresh_token_expire_time DateTime
+
+  created_at            DateTime @default(now())
+  updated_at            DateTime @default(now()) @updatedAt
+}

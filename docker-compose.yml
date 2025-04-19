@@ -1,0 +1,35 @@
+services:
+  backend-database:
+    container_name: x-db
+    image: postgres:latest
+    restart: on-failure
+    environment:
+      POSTGRES_DB: ${POSTGRES_NAME}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - ${POSTGRES_PORT}:5432
+    expose:
+      - ${POSTGRES_PORT}
+    volumes:
+      - ./docker/volumes/:/var/lib/postgresql/data
+    networks:
+      - projectx-network
+
+  redis-x:
+    image: redis:latest
+    container_name: redis-x
+    ports:
+      - ${REDIS_PORT}:6379
+    restart: on-failure
+    volumes:
+      - ./conf/redis.conf:/etc/redis/redis.conf
+    networks:
+      - projectx-network
+
+volumes:
+  postgres:
+
+networks:
+  projectx-network:
+    driver: bridge
