@@ -13,7 +13,6 @@ import { JwtConfig, RedisConfig } from 'common';
 import { PrismaService } from 'infra/database/prisma/prisma.service';
 
 import { AuthModule } from './auth/auth.module';
-import { ManageTweetModule } from './manage-tweet/manage-tweet.module';
 
 @Module({
   imports: [
@@ -48,7 +47,6 @@ import { ManageTweetModule } from './manage-tweet/manage-tweet.module';
       exclude: ['/api/(.*)'],
       serveRoot: '/uploads',
     }),
-    ManageTweetModule,
   ],
   providers: [PrismaService],
 })

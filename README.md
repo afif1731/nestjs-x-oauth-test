@@ -1,4 +1,4 @@
-# shoulder-arthoplasty - BackEnd
+# Project X - BackEnd
 
 ## 🚀 Getting Started
 
@@ -9,13 +9,13 @@ To clone and run this application, you'll need _Git_ and _Docker_ installed on y
 ### Installation
 
 ```sh
-git clone https://github.com/afif1731/shoulder-arthoplasty-backend.git
+git clone https://github.com/afif1731/nestjs-x-oauth-test.git
 ```
 
 2. Go into the repository
 
 ```sh
-cd shoulder-arthoplasty-backend
+cd nestjs-x-oauth-test
 ```
 
 3. Install dependencies
@@ -105,10 +105,6 @@ This will create a new service file inside your module directory, `your_module_n
 > If you're using Linux Bash for Windows, [see this guide](https://www.howtogeek.com/261575/how-to-run-graphical-linux-desktop-applications-from-windows-10s-bash-shell/) or use `node` from the command prompt.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-### How to Use Pagination
-
-> Check `Get All Users` in **/src/users**
 
 ### Pull Procedure
 
