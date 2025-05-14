@@ -135,7 +135,19 @@ export class AuthService {
   async twitterLogin() {
     const { url, codeVerifier, state } = this.client.generateOAuth2AuthLink(
       this.twitterConfig.TWITTER_OAUTH_CALLBACK_URL,
-      { scope: ['tweet.read', 'users.read', 'offline.access'] },
+      {
+        scope: [
+          'tweet.read',
+          'tweet.write',
+          'tweet.moderate.write',
+          'users.read',
+          'block.read',
+          'block.write',
+          'mute.read',
+          'mute.write',
+          'offline.access',
+        ],
+      },
     );
 
     const cacheId = uuid.v4();
@@ -198,6 +210,7 @@ export class AuthService {
         twitter_username: userObject.username,
         access_token: accessToken,
         refresh_token: refreshToken,
+        refresh_token_expire_time: expireTime,
       },
     });
 

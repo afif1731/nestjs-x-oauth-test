@@ -42,3 +42,4 @@ yarn.lock
 docker/
 .env.development
 .env.production
+model/
