@@ -11,3 +11,4 @@ export * from './is-boolean-defined.decorator';
 export * from './is-boolean-optional.decorator';
 export * from './is-enum-defined.decorator';
 export * from './is-enum-optional.decorator';
+export * from './transform-to-dto.decorator';

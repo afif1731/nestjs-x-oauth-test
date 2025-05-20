@@ -34,6 +34,21 @@ model userTwitterData {
   refresh_token             String?
   refresh_token_expire_time DateTime
 
-  created_at            DateTime @default(now())
-  updated_at            DateTime @default(now()) @updatedAt
+  created_at                DateTime @default(now())
+  updated_at                DateTime @default(now()) @updatedAt
+
+  user_muted                userTwitterMuted[]
+}
+
+model userTwitterMuted {
+  id              String  @id @default(uuid())
+  user_target_id  String   // User that got blocked
+  tweet_target_id String  // Tweet that caused the user got blocked
+  tweet_status    String  // Prediction result
+
+  author_data_id  String
+  author          userTwitterData @relation(references: [id], fields: [author_data_id])
+
+  created_at      DateTime @default(now())
+  updated_at      DateTime @default(now()) @updatedAt
 }

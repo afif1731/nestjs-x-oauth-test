@@ -13,6 +13,7 @@ import { JwtConfig, RedisConfig } from 'common';
 import { PrismaService } from 'infra/database/prisma/prisma.service';
 
 import { AuthModule } from './auth/auth.module';
+import { PredictModule } from './predict/predict.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { AuthModule } from './auth/auth.module';
       exclude: ['/api/(.*)'],
       serveRoot: '/uploads',
     }),
+    PredictModule,
   ],
   providers: [PrismaService],
 })

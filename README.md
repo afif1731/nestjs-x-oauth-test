@@ -80,7 +80,7 @@ npm install -g @nestjs/cli
 2. To create module, run
 
 ```sh
-nest g module your_module_name
+nest g module your_module_name --no-spec
 ```
 
 This will create a new folder with `your_module_name.module.ts` inside
@@ -88,7 +88,7 @@ This will create a new folder with `your_module_name.module.ts` inside
 3. To create controller, run
 
 ```sh
-nest g controller your_module_name
+nest g controller your_module_name --no-spec
 ```
 
 This will create a new controller file inside your module directory, `your_module_name.controller.ts`
@@ -96,7 +96,7 @@ This will create a new controller file inside your module directory, `your_modul
 4. To create service, run
 
 ```sh
-nest g service your_module_name
+nest g service your_module_name --no-spec
 ```
 
 This will create a new service file inside your module directory, `your_module_name.service.ts`
