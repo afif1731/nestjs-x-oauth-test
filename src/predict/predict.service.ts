@@ -49,7 +49,10 @@ export class PredictService {
     const seenAuthors = new Set<string>();
 
     return data.filter(item => {
-      if (item.prediction === 'bukan' && !seenAuthors.has(item.user_id)) {
+      if (
+        (item.hs_prediction === 1 || item.sh_prediction === 1) &&
+        !seenAuthors.has(item.user_id)
+      ) {
         seenAuthors.add(item.user_id);
 
         return true;

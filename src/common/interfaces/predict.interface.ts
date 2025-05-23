@@ -4,9 +4,12 @@ export interface PredictAPIResponse {
 }
 
 export interface PredictResult {
-  confidence: number;
-  prediction: 'bukan' | 'yes' | 'unknown';
+  hs_confidence: number;
+  hs_prediction: number;
+  sh_confidence: number;
+  sh_prediction: number;
   tweet_id: string;
   tweet_text: string;
   user_id: string;
+  username: string;
 }

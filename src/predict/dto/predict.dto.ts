@@ -13,6 +13,9 @@ export class PredictDto {
 
   @IsStringDefined()
   user_id: string;
+
+  @IsStringDefined()
+  username: string;
 }
 
 export class BatchPredictDto {
