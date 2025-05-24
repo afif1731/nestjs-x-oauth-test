@@ -16,15 +16,19 @@ export class AccessTokenStrategy extends PassportStrategy(Strategy, 'jwt') {
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: JwtConfig.JWT_ACCESS_SECRET,
+      secretOrKey: JwtConfig.JWT_REFRESH_SECRET,
     });
   }
 
-  async validate(payload: { account_id: string; email: string; role: string }) {
-    return await this.prisma.accounts.findUnique({
+  async validate(payload: {
+    account_id: string;
+    twitter_user_id: string;
+    twitter_username: string;
+  }) {
+    return await this.prisma.userTwitterData.findUnique({
       where: {
         id: payload.account_id,
-        email: payload.email,
+        twitter_user_id: payload.twitter_user_id,
       },
     });
   }

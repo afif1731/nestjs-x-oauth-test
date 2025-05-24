@@ -4,133 +4,66 @@ import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { Cache } from 'cache-manager';
 import { TwitterConfig, ErrorResponse } from 'common';
 import { TwitterApi } from 'twitter-api-v2';
+import { TwitterService } from 'twitter/twitter.service';
 import * as uuid from 'uuid';
 
 import { PrismaService } from 'infra/database/prisma/prisma.service';
+
+import { decodeRefreshToken, getToken } from 'utils';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly twitter: TwitterService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
   private readonly twitterConfig = TwitterConfig;
-
-  // private readonly salt = genSaltSync(12);
 
   private client = new TwitterApi({
     clientId: this.twitterConfig.TWITTER_APP_CLIENT_ID,
     clientSecret: this.twitterConfig.TWITTER_APP_CLIENT_SECRET,
   });
 
-  // async login(data: LoginDto) {
-  //   const isUserExist = await this.findUserByEmail(data.email);
+  async refreshBackendToken(token: string) {
+    const userData = await decodeRefreshToken(token);
 
-  //   if (!isUserExist)
-  //     throw new ErrorResponse(HttpStatus.NOT_FOUND, 'account not found');
-  //   if (!isUserExist.is_active)
-  //     throw new ErrorResponse(
-  //       HttpStatus.FORBIDDEN,
-  //       'this account is not activated yet',
-  //     );
+    const currentTime = Math.floor(Date.now() / 1000);
 
-  //   const isPasswordMatch = compareSync(data.password, isUserExist.password);
-  //   if (!isPasswordMatch)
-  //     throw new ErrorResponse(HttpStatus.FORBIDDEN, 'invalid credential');
+    if (userData.exp < currentTime) {
+      throw new ErrorResponse(
+        HttpStatus.UNAUTHORIZED,
+        'Refresh token has expired, please login',
+      );
+    }
 
-  //   const accessToken = await getToken(
-  //     isUserExist.id,
-  //     isUserExist.email,
-  //     isUserExist.role,
-  //   );
+    const twitterClient = await this.twitter.createTwitterClient(
+      userData.account_id,
+    );
 
-  //   return { token: accessToken };
-  // }
+    const { data } = await twitterClient.v2.me();
 
-  // async register(data: RegisterDto) {
-  //   const isUserExist = await this.findUserByEmail(data.email);
+    const tokens = await this.prisma.userTwitterData.findUnique({
+      where: { id: userData.account_id },
+      select: {
+        access_token: true,
+        refresh_token: true,
+      },
+    });
 
-  //   if (isUserExist)
-  //     throw new ErrorResponse(
-  //       HttpStatus.BAD_REQUEST,
-  //       'email already registered',
-  //     );
+    const backendToken = await getToken(
+      userData.account_id,
+      data.id,
+      data.username,
+    );
 
-  //   if (data.password !== data.confirm_password)
-  //     throw new ErrorResponse(
-  //       HttpStatus.UNPROCESSABLE_ENTITY,
-  //       'password is not matched',
-  //     );
-
-  //   const encryptedPassword = await hash(data.password, this.salt);
-
-  //   const newAccount = await this.prisma.accounts.create({
-  //     data: {
-  //       email: data.email,
-  //       username: data.username,
-  //       password: encryptedPassword,
-  //     },
-  //   });
-
-  //   return {
-  //     username: newAccount.username,
-  //     email: newAccount.email,
-  //   };
-  // }
-
-  // async me(user_id: string, user_role: Role) {
-  //   const user = await this.prisma.accounts.findUnique({
-  //     where: { id: user_id },
-  //     select: {
-  //       id: true,
-  //       username: true,
-  //       email: true,
-  //       role: true,
-  //       created_at: user_role === 'USER',
-  //     },
-  //   });
-
-  //   return user;
-  // }
-
-  // async findUserByEmail(email: string) {
-  //   return await this.prisma.accounts.findUnique({
-  //     where: { email },
-  //   });
-  // }
-
-  // async verifyToken(token: string, email: string) {
-  //   let tokenPayload;
-
-  //   try {
-  //     tokenPayload = await verifyEmailToken(token);
-
-  //     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  //   } catch (error: any) {
-  //     const errorResult =
-  //       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-  //       error.name == 'TokenExpiredError'
-  //         ? new ErrorResponse(HttpStatus.BAD_REQUEST, 'token expired')
-  //         : new ErrorResponse(HttpStatus.BAD_REQUEST, 'invalid token');
-
-  //     throw errorResult;
-  //   }
-
-  //   const isUserExist = await this.findUserByEmail(tokenPayload.email);
-
-  //   if (!isUserExist)
-  //     throw new ErrorResponse(HttpStatus.NOT_FOUND, 'email not found');
-
-  //   if (
-  //     isUserExist.id !== tokenPayload.id ||
-  //     email !== isUserExist.email ||
-  //     email !== tokenPayload.email
-  //   )
-  //     throw new ErrorResponse(HttpStatus.BAD_REQUEST, 'invalid token');
-
-  //   return isUserExist;
-  // }
+    return {
+      access_token: tokens.access_token,
+      refresh_token: tokens.refresh_token,
+      backend_token: backendToken,
+    };
+  }
 
   async twitterLogin() {
     const { url, codeVerifier, state } = this.client.generateOAuth2AuthLink(
@@ -197,7 +130,7 @@ export class AuthService {
 
     const expireTime = new Date(Date.now() + expiresIn * 1000);
 
-    await this.prisma.userTwitterData.upsert({
+    const user = await this.prisma.userTwitterData.upsert({
       where: { twitter_user_id: userObject.id },
       create: {
         twitter_user_id: userObject.id,
@@ -214,11 +147,17 @@ export class AuthService {
       },
     });
 
+    const backendToken = await getToken(
+      user.id,
+      userObject.id,
+      userObject.username,
+    );
+
     return {
       twitter_user_id: userObject.id,
       twitter_username: userObject.username,
       access_token: accessToken,
-      refresh_token: refreshToken,
+      backend_token: backendToken,
       expire_in: `${expiresIn}s`,
     };
   }

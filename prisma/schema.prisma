@@ -41,14 +41,15 @@ model userTwitterData {
 }
 
 model userTwitterMuted {
-  id                String  @id @default(uuid())
-  user_target_id    String   // User id that got blocked
-  username_target   String   // User name that got blocked
-  tweet_target_id   String  // Tweet that caused the user got blocked
-  tweet_status      String  // Prediction result
+  id                      String    @id @default(uuid())
+  blocked_user_id         String    // User id that got blocked
+  blocked_username        String    // User name that got blocked
+  blocked_tweet_id        String    // Tweet that caused the user got blocked
+  is_hate_speech          Boolean
+  is_sexual_harassment    Boolean
 
-  author_data_id    String
-  author            userTwitterData @relation(references: [id], fields: [author_data_id])
+  author_id         String
+  author            userTwitterData @relation(references: [id], fields: [author_id])
 
   created_at        DateTime @default(now())
   updated_at        DateTime @default(now()) @updatedAt

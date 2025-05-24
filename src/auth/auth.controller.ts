@@ -1,37 +1,23 @@
 import { CacheInterceptor } from '@nestjs/cache-manager';
 import {
+  Body,
   Controller,
   Get,
   HttpStatus,
+  Post,
   Query,
   UseInterceptors,
+  ValidationPipe,
 } from '@nestjs/common';
 
 import { ErrorResponse, SuccessResponse } from 'common';
 
 import { AuthService } from './auth.service';
+import { RefreshBackendTokenDto } from './dto';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
-
-  // @Post('login')
-  // async login(@Body(ValidationPipe) data: LoginDto) {
-  //   const token = await this.authService.login(data);
-
-  //   return new SuccessResponse(HttpStatus.OK, 'login successfully', token);
-  // }
-
-  // @Post('register')
-  // async register(@Body(ValidationPipe) data: RegisterDto) {
-  //   const result = await this.authService.register(data);
-
-  //   return new SuccessResponse(
-  //     HttpStatus.CREATED,
-  //     'register successfully',
-  //     result,
-  //   );
-  // }
 
   @Get('twitter-login')
   @UseInterceptors(CacheInterceptor)
@@ -65,19 +51,14 @@ export class AuthController {
     return new SuccessResponse(HttpStatus.OK, 'twitter login success', result);
   }
 
-  // @Get('me')
-  // @ROLES('ADMIN', 'USER')
-  // @UseGuards(JwtGuard, RolesGuard)
-  // async getMe(
-  //   @GET_USER('id') user_id: string,
-  //   @GET_USER('role') user_role: Role,
-  // ) {
-  //   const result = await this.authService.me(user_id, user_role);
+  @Post('refresh-backend-token')
+  async refreshBackendToken(
+    @Body(ValidationPipe) data: RefreshBackendTokenDto,
+  ) {
+    const result = await this.authService.refreshBackendToken(
+      data.backend_token,
+    );
 
-  //   return new SuccessResponse(
-  //     HttpStatus.OK,
-  //     'get user data successfully',
-  //     result,
-  //   );
-  // }
+    return new SuccessResponse(HttpStatus.OK, 'Getting new token', result);
+  }
 }
