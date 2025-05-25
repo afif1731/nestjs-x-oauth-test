@@ -55,8 +55,8 @@ export class StatisticService {
 
     if (formattedResult.length < 12) {
       let fakeData = this.generateFakeTweetData(
-        Number(result[0].year),
-        Number(result[0].month),
+        result.length === 0 ? 2025 : Number(result[0].year),
+        result.length === 0 ? 5 : Number(result[0].month),
         12 - formattedResult.length,
       );
       fakeData.push(...formattedResult);
@@ -99,7 +99,9 @@ export class StatisticService {
 
     if (data.length < 20) {
       let fakeData = this.generateFakeUserData(
-        data[data.length - 1].created_at,
+        data.length === 0
+          ? new Date(Date.now())
+          : data[data.length - 1].created_at,
         20 - data.length,
       );
       fakeData.push(...data);
