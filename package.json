@@ -47,6 +47,7 @@
     ]
   },
   "dependencies": {
+    "@faker-js/faker": "^9.8.0",
     "@fastify/static": "^7.0.0",
     "@keyv/redis": "^4.3.3",
     "@nestjs/axios": "^3.1.3",
