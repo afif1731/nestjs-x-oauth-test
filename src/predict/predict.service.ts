@@ -3,8 +3,7 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 
 import { type AxiosResponse } from 'axios';
 import { firstValueFrom } from 'rxjs';
-import { type TwitterApi } from 'twitter-api-v2';
-import { TwitterService } from 'twitter/twitter.service';
+import { TwitterQueueService } from 'twitter-queue/twitter-queue.service';
 
 import { PrismaService } from 'infra/database/prisma/prisma.service';
 
@@ -22,21 +21,18 @@ export class PredictService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly httpService: HttpService,
-    private readonly twitter: TwitterService,
+    private readonly twitterQueueService: TwitterQueueService,
   ) {}
 
   async doBatchPredict(user_id: string, data: BatchPredictDto) {
-    const client = await this.twitter.createTwitterClient(user_id);
-
     const prediction = await this.getPredict(data);
 
-    const filteredPrediction = this.filterPrediction(prediction.result);
-
-    await this.muteAndStoreTweet(user_id, filteredPrediction, client);
+    const result = await this.muteAndStoreTweet(user_id, prediction.result);
 
     return {
       prediction: prediction,
-      user_muted: filteredPrediction.length,
+      user_muted: prediction.result.length,
+      twitter_api_result: result,
     };
   }
 
@@ -52,28 +48,60 @@ export class PredictService {
     }
   }
 
-  async muteAndStoreTweet(
-    user_id: string,
-    predictResult: PredictResult[],
-    twitter_client: TwitterApi,
-  ) {
+  async muteAndStoreTweet(user_id: string, predictResult: PredictResult[]) {
+    const filteredPrediction = this.filterPrediction(predictResult);
+
     for (const prediction of predictResult) {
-      await this.prisma.userTwitterMuted.create({
-        data: {
-          author_id: user_id,
-          blocked_user_id: prediction.user_id,
-          blocked_tweet_id: prediction.tweet_id,
-          blocked_username: prediction.username,
-          is_hate_speech: prediction.hs_prediction === 1,
-          is_sexual_harassment: prediction.sh_prediction === 1,
+      const isSimilarDataExist = await this.prisma.userTwitterMuted.findFirst({
+        where: {
+          AND: [
+            { author_id: user_id },
+            { blocked_user_id: prediction.user_id },
+            { blocked_tweet_id: prediction.tweet_id },
+          ],
         },
       });
 
-      // TODO: connect to twitter API
+      await (isSimilarDataExist
+        ? this.prisma.userTwitterMuted.update({
+            where: { id: isSimilarDataExist.id },
+            data: {
+              blocked_username: prediction.username,
+              is_hate_speech: prediction.hs_prediction === 1,
+              is_sexual_harassment: prediction.sh_prediction === 1,
+            },
+          })
+        : this.prisma.userTwitterMuted.create({
+            data: {
+              author_id: user_id,
+              blocked_user_id: prediction.user_id,
+              blocked_tweet_id: prediction.tweet_id,
+              blocked_username: prediction.username,
+              is_hate_speech: prediction.hs_prediction === 1,
+              is_sexual_harassment: prediction.sh_prediction === 1,
+              is_tweet_hidden: false,
+              is_user_muted: false,
+            },
+          }));
+
+      if (this.isValidNumber(prediction.tweet_id))
+        await this.twitterQueueService.hideTwitter(
+          user_id,
+          prediction.user_id,
+          prediction.tweet_id,
+        );
+      if (this.isValidNumber(prediction.user_id))
+        await this.twitterQueueService.muteTwitterUser(
+          user_id,
+          prediction.user_id,
+          prediction.tweet_id,
+        );
     }
 
-    // Cuma mocking aja, cek client bisa jalan atau nda
-    await twitter_client.v2.me();
+    return {
+      hidden_reply: predictResult.length,
+      muted_user: filteredPrediction.length,
+    };
   }
 
   filterPrediction(data: PredictResult[]) {
@@ -91,5 +119,11 @@ export class PredictService {
 
       return false;
     });
+  }
+
+  isValidNumber(input: string) {
+    const regex = /^[0-9]{1,19}$/;
+
+    return regex.test(input);
   }
 }

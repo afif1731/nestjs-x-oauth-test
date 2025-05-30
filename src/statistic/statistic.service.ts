@@ -1,11 +1,11 @@
 /* eslint-disable unicorn/no-nested-ternary */
 import { HttpStatus, Injectable } from '@nestjs/common';
 
+import { fakerID_ID } from '@faker-js/faker';
 import { Prisma } from '@prisma/client';
 import { ErrorResponse } from 'common';
 import { format } from 'date-fns';
 import * as uuid from 'uuid';
-import { fakerID_ID } from '@faker-js/faker';
 
 import { PrismaService } from 'infra/database/prisma/prisma.service';
 
@@ -54,7 +54,7 @@ export class StatisticService {
     });
 
     if (formattedResult.length < 12) {
-      let fakeData = this.generateFakeTweetData(
+      const fakeData = this.generateFakeTweetData(
         result.length === 0 ? 2025 : Number(result[0].year),
         result.length === 0 ? 5 : Number(result[0].month),
         12 - formattedResult.length,
@@ -90,6 +90,8 @@ export class StatisticService {
         blocked_user_id: true,
         blocked_tweet_id: true,
         blocked_username: true,
+        is_tweet_hidden: true,
+        is_user_muted: true,
         created_at: true,
       },
       orderBy: {
@@ -98,10 +100,8 @@ export class StatisticService {
     });
 
     if (data.length < 20) {
-      let fakeData = this.generateFakeUserData(
-        data.length === 0
-          ? new Date(Date.now())
-          : data[data.length - 1].created_at,
+      const fakeData = this.generateFakeUserData(
+        data.length === 0 ? new Date(Date.now()) : data.at(-1).created_at,
         20 - data.length,
       );
       fakeData.push(...data);
@@ -113,7 +113,7 @@ export class StatisticService {
   }
 
   generateFakeTweetData(lastYear: number, lastMonth: number, amount: number) {
-    let result: { month: string; amount: number }[] = [];
+    const result: { month: string; amount: number }[] = [];
     let year: number = lastYear;
     let month: number = lastMonth - 1;
 
@@ -122,9 +122,9 @@ export class StatisticService {
       month = 12;
     }
 
-    for (let i = 0; i < amount; i++) {
+    for (let index = 0; index < amount; index++) {
       const date = new Date(Number(year), Number(month) - 1);
-      const fakeAmount = Math.ceil(Math.random() * 10000 + 100) % 50000;
+      const fakeAmount = Math.ceil(Math.random() * 10_000 + 100) % 50_000;
 
       result.push({
         month: format(date, 'MMMM yyyy'),
@@ -143,21 +143,25 @@ export class StatisticService {
   }
 
   generateFakeUserData(lastTime: Date, amount: number) {
-    let result: {
+    const result: {
       blocked_user_id: string;
       blocked_tweet_id: string;
       blocked_username: string;
+      is_tweet_hidden: boolean;
+      is_user_muted: boolean;
       created_at: Date;
     }[] = [];
     let time: Date = new Date(lastTime);
 
-    for (let i = 0; i < amount; i++) {
+    for (let index = 0; index < amount; index++) {
       time = new Date(time.getTime() - (Math.ceil(Math.random() * 1000) % 50));
 
       result.push({
         blocked_tweet_id: uuid.v4(),
         blocked_user_id: uuid.v4(),
         blocked_username: `${fakerID_ID.person.firstName()}${fakerID_ID.person.lastName()}`,
+        is_tweet_hidden: true,
+        is_user_muted: true,
         created_at: time,
       });
     }

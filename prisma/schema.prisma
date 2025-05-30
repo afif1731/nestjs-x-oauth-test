@@ -47,6 +47,8 @@ model userTwitterMuted {
   blocked_tweet_id        String    // Tweet that caused the user got blocked
   is_hate_speech          Boolean
   is_sexual_harassment    Boolean
+  is_user_muted           Boolean?
+  is_tweet_hidden         Boolean?
 
   author_id         String
   author            userTwitterData @relation(references: [id], fields: [author_id])

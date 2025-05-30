@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-base-to-string */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 
 import { Cache } from 'cache-manager';
 import { TwitterConfig, ErrorResponse } from 'common';
-import { TwitterApi } from 'twitter-api-v2';
+import { type UserV2, ApiResponseError, TwitterApi } from 'twitter-api-v2';
 import { TwitterService } from 'twitter/twitter.service';
 import * as uuid from 'uuid';
 
@@ -115,18 +117,47 @@ export class AuthService {
         'State Token did not match!',
       );
 
-    const {
-      client: loggedClient,
-      accessToken,
-      refreshToken,
-      expiresIn,
-    } = await this.client.loginWithOAuth2({
-      code,
-      codeVerifier,
-      redirectUri: this.twitterConfig.TWITTER_OAUTH_CALLBACK_URL,
-    });
+    let userObject: UserV2;
 
-    const { data: userObject } = await loggedClient.v2.me();
+    let loggedClient: TwitterApi;
+    let accessToken: string;
+    let refreshToken: string;
+    let expiresIn: number;
+
+    try {
+      const result = await this.client.loginWithOAuth2({
+        code,
+        codeVerifier,
+        redirectUri: this.twitterConfig.TWITTER_OAUTH_CALLBACK_URL,
+      });
+
+      loggedClient = result.client;
+      accessToken = result.accessToken;
+      refreshToken = result.refreshToken;
+      expiresIn = result.expiresIn;
+
+      const { data } = await loggedClient.v2.me();
+
+      userObject = data;
+    } catch (error) {
+      if (error instanceof ApiResponseError) {
+        if (error.code === 400)
+          throw new ErrorResponse(
+            error.code,
+            `Invalid Request: One or more parameters to your request was invalid. Stack: ${error.errors}`,
+          );
+        else if (error.code === 429)
+          throw new ErrorResponse(
+            error.code,
+            `Invalid Request: ${error.toJSON().error.detail}. ${error}`,
+          );
+      }
+
+      throw new ErrorResponse(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        `An Error Occured. Stack: ${error}`,
+      );
+    }
 
     const expireTime = new Date(Date.now() + expiresIn * 1000);
 

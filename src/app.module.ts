@@ -15,6 +15,7 @@ import { PrismaService } from 'infra/database/prisma/prisma.service';
 import { AuthModule } from './auth/auth.module';
 import { PredictModule } from './predict/predict.module';
 import { StatisticModule } from './statistic/statistic.module';
+import { TwitterQueueModule } from './twitter-queue/twitter-queue.module';
 import { TwitterModule } from './twitter/twitter.module';
 
 @Module({
@@ -53,6 +54,7 @@ import { TwitterModule } from './twitter/twitter.module';
     PredictModule,
     StatisticModule,
     TwitterModule,
+    TwitterQueueModule,
   ],
   providers: [PrismaService],
 })
