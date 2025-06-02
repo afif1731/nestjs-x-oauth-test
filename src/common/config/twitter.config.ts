@@ -8,4 +8,6 @@ export const TwitterConfig = {
   TWITTER_API_REQUEST_DELAY:
     Number.parseInt(process.env.TWITTER_API_REQUEST_DELAY) ||
     15 * 60 * 1000 + 1000,
+  STATISTIC_FILL_WITH_FAKE_DATA:
+    process.env.STATISTIC_FILL_WITH_FAKE_DATA === 'true' || false,
 };

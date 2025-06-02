@@ -3,7 +3,7 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 
 import { fakerID_ID } from '@faker-js/faker';
 import { Prisma } from '@prisma/client';
-import { ErrorResponse } from 'common';
+import { ErrorResponse, TwitterConfig } from 'common';
 import { format } from 'date-fns';
 import * as uuid from 'uuid';
 
@@ -53,7 +53,10 @@ export class StatisticService {
       };
     });
 
-    if (formattedResult.length < 12) {
+    if (
+      formattedResult.length < 12 &&
+      TwitterConfig.STATISTIC_FILL_WITH_FAKE_DATA
+    ) {
       const fakeData = this.generateFakeTweetData(
         result.length === 0 ? 2025 : Number(result[0].year),
         result.length === 0 ? 5 : Number(result[0].month),
@@ -99,7 +102,7 @@ export class StatisticService {
       },
     });
 
-    if (data.length < 20) {
+    if (data.length < 20 && TwitterConfig.STATISTIC_FILL_WITH_FAKE_DATA) {
       const fakeData = this.generateFakeUserData(
         data.length === 0 ? new Date(Date.now()) : data.at(-1).created_at,
         20 - data.length,
