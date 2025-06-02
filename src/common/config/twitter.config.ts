@@ -5,4 +5,7 @@ export const TwitterConfig = {
     process.env.TWITTER_APP_CLIENT_SECRET || 'fake-app-secret',
   TWITTER_OAUTH_CALLBACK_URL:
     process.env.TWITTER_OAUTH_CALLBACK_URL || 'http://127.0.0.1:4000',
+  TWITTER_API_REQUEST_DELAY:
+    Number.parseInt(process.env.TWITTER_API_REQUEST_DELAY) ||
+    15 * 60 * 1000 + 1000,
 };

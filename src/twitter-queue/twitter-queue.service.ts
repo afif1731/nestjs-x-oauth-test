@@ -4,7 +4,7 @@ import { InjectQueue } from '@nestjs/bull';
 import { HttpStatus, Injectable } from '@nestjs/common';
 
 import { Queue } from 'bull';
-import { ErrorResponse } from 'common';
+import { ErrorResponse, TwitterConfig } from 'common';
 
 import { type ITwitterQueueData } from './interface';
 
@@ -17,7 +17,7 @@ export class TwitterQueueService {
   // Fungsi Start Job buat aktivasi bull
   async startJobMuteUser(data: ITwitterQueueData, isDelayed: boolean) {
     const job = await this.twitterQueue.add('mute-queue', data, {
-      delay: isDelayed ? 15 * 60 * 1000 : undefined,
+      delay: isDelayed ? TwitterConfig.TWITTER_API_REQUEST_DELAY : undefined,
     });
 
     return { jobId: job.id };
@@ -25,7 +25,7 @@ export class TwitterQueueService {
 
   async startJobHideReply(data: ITwitterQueueData, isDelayed: boolean) {
     const job = await this.twitterQueue.add('hide-queue', data, {
-      delay: isDelayed ? 15 * 60 * 1000 : undefined,
+      delay: isDelayed ? TwitterConfig.TWITTER_API_REQUEST_DELAY : undefined,
     });
 
     return { jobId: job.id };

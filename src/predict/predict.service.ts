@@ -27,7 +27,13 @@ export class PredictService {
   async doBatchPredict(user_id: string, data: BatchPredictDto) {
     const prediction = await this.getPredict(data);
 
-    const result = await this.muteAndStoreTweet(user_id, prediction.result);
+    const filteredPrediction = prediction.result.filter(item => {
+      if (item.sh_prediction === 1 || item.hs_prediction === 1) return true;
+
+      return false;
+    });
+
+    const result = await this.muteAndStoreTweet(user_id, filteredPrediction);
 
     return {
       prediction: prediction,
@@ -49,7 +55,9 @@ export class PredictService {
   }
 
   async muteAndStoreTweet(user_id: string, predictResult: PredictResult[]) {
-    const filteredPrediction = this.filterPrediction(predictResult);
+    const filteredAuthorPrediction = this.filterPrediction(predictResult);
+    let invalidUserId = 0;
+    let invalidTweetId = 0;
 
     for (const prediction of predictResult) {
       const isSimilarDataExist = await this.prisma.userTwitterMuted.findFirst({
@@ -90,17 +98,20 @@ export class PredictService {
           prediction.user_id,
           prediction.tweet_id,
         );
+      else invalidTweetId++;
+
       if (this.isValidNumber(prediction.user_id))
         await this.twitterQueueService.muteTwitterUser(
           user_id,
           prediction.user_id,
           prediction.tweet_id,
         );
+      else invalidUserId++;
     }
 
     return {
-      hidden_reply: predictResult.length,
-      muted_user: filteredPrediction.length,
+      hidden_reply: predictResult.length - invalidTweetId,
+      muted_user: filteredAuthorPrediction.length - invalidUserId,
     };
   }
 
