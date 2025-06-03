@@ -3,6 +3,7 @@ import {
   Controller,
   HttpStatus,
   Post,
+  Query,
   UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
@@ -21,8 +22,18 @@ export class PredictController {
   async batchPredict(
     @GET_USER('id') user_id: string,
     @Body(ValidationPipe) data: BatchPredictDto,
+    @Query('hide') isHide: string | null,
+    @Query('mute') isMute: string | null,
   ) {
-    const result = await this.predictService.doBatchPredict(user_id, data);
+    const isCleanedHide = isHide === 'true';
+    const isCleanedMute = isMute === 'true';
+
+    const result = await this.predictService.doBatchPredict(
+      user_id,
+      data,
+      isCleanedHide,
+      isCleanedMute,
+    );
 
     return new SuccessResponse(
       HttpStatus.OK,

@@ -24,7 +24,12 @@ export class PredictService {
     private readonly twitterQueueService: TwitterQueueService,
   ) {}
 
-  async doBatchPredict(user_id: string, data: BatchPredictDto) {
+  async doBatchPredict(
+    user_id: string,
+    data: BatchPredictDto,
+    is_hide: boolean,
+    is_mute: boolean,
+  ) {
     const prediction = await this.getPredict(data);
 
     const filteredPrediction = prediction.result.filter(item => {
@@ -33,12 +38,23 @@ export class PredictService {
       return false;
     });
 
-    const result = await this.muteAndStoreTweet(user_id, filteredPrediction);
+    if (is_hide || is_mute) {
+      const result = await this.muteAndStoreTweet(
+        user_id,
+        filteredPrediction,
+        is_hide,
+        is_mute,
+      );
+
+      return {
+        prediction: prediction,
+        user_muted: prediction.result.length,
+        twitter_api_result: result,
+      };
+    }
 
     return {
       prediction: prediction,
-      user_muted: prediction.result.length,
-      twitter_api_result: result,
     };
   }
 
@@ -54,7 +70,12 @@ export class PredictService {
     }
   }
 
-  async muteAndStoreTweet(user_id: string, predictResult: PredictResult[]) {
+  async muteAndStoreTweet(
+    user_id: string,
+    predictResult: PredictResult[],
+    is_hide: boolean,
+    is_mute: boolean,
+  ) {
     const filteredAuthorPrediction = this.filterPrediction(predictResult);
     let invalidUserId = 0;
     let invalidTweetId = 0;
@@ -92,26 +113,26 @@ export class PredictService {
             },
           }));
 
-      if (this.isValidNumber(prediction.tweet_id))
+      if (this.isValidNumber(prediction.tweet_id) && is_hide)
         await this.twitterQueueService.hideTwitter(
           user_id,
           prediction.user_id,
           prediction.tweet_id,
         );
-      else invalidTweetId++;
+      else if (is_hide) invalidTweetId++;
 
-      if (this.isValidNumber(prediction.user_id))
+      if (this.isValidNumber(prediction.user_id) && is_mute)
         await this.twitterQueueService.muteTwitterUser(
           user_id,
           prediction.user_id,
           prediction.tweet_id,
         );
-      else invalidUserId++;
+      else if (is_mute) invalidUserId++;
     }
 
     return {
-      hidden_reply: predictResult.length - invalidTweetId,
-      muted_user: filteredAuthorPrediction.length - invalidUserId,
+      hidden_reply: is_hide ? predictResult.length - invalidTweetId : 0,
+      muted_user: is_mute ? filteredAuthorPrediction.length - invalidUserId : 0,
     };
   }
 
