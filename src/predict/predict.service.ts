@@ -38,20 +38,19 @@ export class PredictService {
       return false;
     });
 
-    if (is_hide || is_mute) {
-      const result = await this.muteAndStoreTweet(
-        user_id,
-        filteredPrediction,
-        is_hide,
-        is_mute,
-      );
+    const result = await this.muteAndStoreTweet(
+      user_id,
+      filteredPrediction,
+      is_hide,
+      is_mute,
+    );
 
+    if (is_hide || is_mute)
       return {
         prediction: prediction,
         user_muted: prediction.result.length,
         twitter_api_result: result,
       };
-    }
 
     return {
       prediction: prediction,
