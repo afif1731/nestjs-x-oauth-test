@@ -30,6 +30,13 @@ export class PredictService {
     is_hide: boolean,
     is_mute: boolean,
   ) {
+    const isUserExist = await this.prisma.userTwitterData.findFirst({
+      where: { id: user_id },
+    });
+
+    if (!isUserExist)
+      throw new ErrorResponse(HttpStatus.NOT_FOUND, 'user tidak ditemukan');
+
     const prediction = await this.getPredict(data);
 
     const filteredPrediction = prediction.result.filter(item => {
@@ -39,6 +46,7 @@ export class PredictService {
     });
 
     const result = await this.muteAndStoreTweet(
+      isUserExist.twitter_user_id,
       user_id,
       filteredPrediction,
       is_hide,
@@ -70,6 +78,7 @@ export class PredictService {
   }
 
   async muteAndStoreTweet(
+    twitter_user_id: string,
     user_id: string,
     predictResult: PredictResult[],
     is_hide: boolean,
@@ -114,6 +123,7 @@ export class PredictService {
 
       if (this.isValidNumber(prediction.tweet_id) && is_hide)
         await this.twitterQueueService.hideTwitter(
+          twitter_user_id,
           user_id,
           prediction.user_id,
           prediction.tweet_id,
@@ -122,6 +132,7 @@ export class PredictService {
 
       if (this.isValidNumber(prediction.user_id) && is_mute)
         await this.twitterQueueService.muteTwitterUser(
+          twitter_user_id,
           user_id,
           prediction.user_id,
           prediction.tweet_id,

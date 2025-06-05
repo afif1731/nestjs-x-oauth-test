@@ -33,6 +33,7 @@ export class TwitterQueueService {
 
   // Fungsi yang ini buat dipanggil di service / yang lain
   async muteTwitterUser(
+    twitter_user_id: string,
     author_id: string,
     muted_user_id: string,
     hidden_tweet_id: string,
@@ -41,6 +42,7 @@ export class TwitterQueueService {
     try {
       await this.startJobMuteUser(
         {
+          twitter_user_id,
           author_id,
           muted_user_id,
           hidden_tweet_id,
@@ -58,6 +60,7 @@ export class TwitterQueueService {
   }
 
   async hideTwitter(
+    twitter_user_id: string,
     author_id: string,
     muted_user_id: string,
     hidden_tweet_id: string,
@@ -66,6 +69,7 @@ export class TwitterQueueService {
     try {
       await this.startJobHideReply(
         {
+          twitter_user_id,
           author_id,
           muted_user_id,
           hidden_tweet_id,

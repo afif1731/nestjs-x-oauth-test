@@ -46,7 +46,7 @@ export class TwitterQueueProcessor {
     try {
       tweetApiResult =
         job === 'mute-queue'
-          ? await client.v2.mute(data.author_id, data.muted_user_id)
+          ? await client.v2.mute(data.twitter_user_id, data.muted_user_id)
           : await client.v2.hideReply(data.hidden_tweet_id, true);
 
       if (job === 'mute-queue') {
@@ -82,12 +82,14 @@ export class TwitterQueueProcessor {
         if (error.code === 429) {
           job === 'mute-queue'
             ? await this.twitterQueueService.muteTwitterUser(
+                data.twitter_user_id,
                 data.author_id,
                 data.muted_user_id,
                 data.hidden_tweet_id,
                 true,
               )
             : await this.twitterQueueService.hideTwitter(
+                data.twitter_user_id,
                 data.author_id,
                 data.muted_user_id,
                 data.hidden_tweet_id,
